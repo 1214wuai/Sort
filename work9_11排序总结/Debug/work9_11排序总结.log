@@ -1,0 +1,4 @@
+﻿  test.c
+d:\c\work\work9_11排序总结\work9_11排序总结\test.c(117): warning C4047: “<=”:“int”与“int *”的间接级别不同
+d:\c\work\work9_11排序总结\work9_11排序总结\test.c(121): warning C4047: “>=”:“int”与“int *”的间接级别不同
+  work9_11排序总结.vcxproj -> D:\c\work\work9_11排序总结\Debug\work9_11排序总结.exe
