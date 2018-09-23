@@ -1,5 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdlib.h>
+#include<assert.h>
 //1.实现插入、希尔、选择、堆排、冒泡、快排、归并排序 
 //2.总结各个排序的性能、稳定性等优缺点。
 void Print(int arr[], int sz)
@@ -107,44 +109,199 @@ void Bubble_Sort(int arr[], int sz)
 	Print(arr, sz);
 }
 
-void Quick_Sort(int arr[], int sz)
+int GetMid(int *arr,int left, int right)//三数取中
 {
-	int* key = &arr[0];
-	int left = 1;
-	int right = sz - 1;
+	assert(arr);
+	int mid = left + ((right - left) >> 1);
+	if (arr[left] < arr[right])
+	{
+		if (arr[right] < arr[mid])
+			return right;
+		else if (arr[left] > arr[mid])
+			return left;
+		else
+			return mid;
+	}
+	else//right<left
+	{
+		if (arr[left] < arr[mid])
+			return left;
+		else if (arr[right] > arr[mid])
+			return right;
+		else
+			return mid;
+	}
+}
+int Quick_Sort(int* arr, int left,int right)//左右指针法
+{
+	assert(arr);
+	int mid = GetMid(arr, left, right);
+	Swap(&arr[mid], &arr[right]);
+	int key = right;
 	while (left < right)
 	{
-		while ((left < right)&&(arr[left] <= key))
+		while ((left < right)&&(arr[left] <= arr[key]))
 		{
 			++left;
 		}
-		while ((left < right)&&(arr[right] >= key))
+		while ((left < right)&&(arr[right] >= arr[key]))
 		{
 			--right;
 		}
 		Swap(&arr[left], &arr[right]);
-		//Swap(&arr[left], &key);
+		//key = right;
 	}
-	Swap(&arr[left], key);
+	Swap(&arr[right], &arr[key]);
+	return right;
+}
+int Quick_Sort2(int *arr, int left, int right)//挖坑排序法
+{
+	assert(arr);
+	int mid = GetMid(arr, left, right);
+	Swap(&arr[mid], &arr[right]);
+	int keyindex = right;
+	int tmp = arr[keyindex];
+	while (left < right)
+	{
+		while ((left < right) && (arr[left] <= tmp))
+		{
+			left++;
+		}
+		arr[right] = arr[left];
+		while ((left < right) && (arr[right] >= tmp))
+		{
+			right--;
+		}
+		arr[left] = arr[right];
+	}
+	arr[right] = tmp;
+	return right;
+}
+int Quick_Sort3(int *arr, int left, int right)//前后指针法
+{
+	assert(arr);
+	int cur = left;
+	int prev = cur - 1;
+	int key = arr[right];
+	int keyindex = right;
+	while (cur < right)
+	{
+		if (arr[cur] < key && (++prev != cur))
+			Swap(&arr[cur], &arr[prev]);
+		++cur;
+	}
+	Swap(&arr[++prev], &arr[keyindex]);
+	return prev;
+}
+void QuickSort(int *arr, int left, int right)
+{
+	assert(arr);
+	if (left > right)
+		return;
+	int div = Quick_Sort3(arr, left, right);
+	QuickSort(arr, left, div - 1);
+	QuickSort(arr, div+1, right);
 	printf("Quick_Sort:");
+	Print(arr, right+1);
+}
+
+void AdjustDown(int* arr, int n, int root)
+{
+	assert(arr);
+	int parent = root;
+	int child = parent * 2 + 1;
+
+	while (child < n)
+	{
+		if ((child + 1<n) && (arr[child + 1] > arr[child]))
+			child++;
+		if (arr[child] > arr[parent])
+		{
+			Swap(&arr[child], &arr[parent]);
+			parent = child;
+			child = parent * 2 + 1;
+		}
+		else
+			break;
+	}
+}
+void Heap_Sort(int *arr, int left, int sz)
+{
+	assert(arr);
+	int i = 0;
+	int end = sz-1;
+	for (i = (sz - 2) / 2; i >= 0; i--)
+	{
+		AdjustDown(arr, sz, i);
+	}
+	while (end)
+	{
+		Swap(&arr[0], &arr[end]);
+		AdjustDown(arr, end, 0);//交换后，最大的数在最后面，把其次大的数再放到最上面，接下来再交换
+		end--;
+	}
+	printf("Heap_Sort:");
 	Print(arr, sz);
 }
-test()
+void Merge(int* arr, int left1, int right1, int left2, int right2, int* tmp)
 {
-	int x = 1;
-	int y = 2;
-	Swap(&x, &y);
+	int index, start,n;
+	assert(arr);
+	index = left1;
+	start = left1;
+	n = right2 - left1 + 1;
+	while (left1 <= right1 && left2 <= right2)
+	{
+		if (arr[left1] < arr[left2])
+		{
+			//tmp[index++] = arr[left2++];//降序
+			tmp[index++] = arr[left1++];//升序
+		}
+		else
+		{
+			//tmp[index++] = arr[left1++];//降序
+			tmp[index++] = arr[left2++];//升序
+		}
+	}
+	while (left1 <= right1)
+		tmp[index++] = arr[left1++];
+	while (left2 <= right2)
+		tmp[index++] = arr[left2++];
+	memcpy(arr + start, tmp + start, sizeof(int)*n);
+}
+void _MergeSort(int* arr,int left, int right,int* tmp)
+{
+	assert(arr);
+	if (left >= right)
+		return;
+	int mid = left + ((right - left) >> 1);
+	//[left,mid][mid+1,right]
+	_MergeSort(arr, left, mid, tmp);
+	_MergeSort(arr, mid + 1, right, tmp);
+	Merge(arr, left, mid, mid + 1, right, tmp);
+
+}
+void Merge_Sort(int* arr, int sz)
+{
+	assert(arr);
+	int* tmp = (int*)malloc(sizeof(int)*sz);
+	_MergeSort(arr,0,sz-1,tmp);
+	printf("Merge_Sort:");
+	Print(arr, sz);
+	free(tmp);
 }
 int main()
 {
-	int arr[] = { 5,9,4,6,2,8,0,7,3,1 };
+	int arr[] = { 1,9,4,5,2,8,0,7,3,56};
 	int sz = sizeof(arr) / sizeof(arr[0]);
 	//Insertion_Sort(arr, sz);
 	//Shell_Sort(arr, sz);
 	//Select_Sort(arr, sz);
 	//Bubble_Sort(arr,sz);
-	Quick_Sort(arr, sz);
-	//test();
+	//Heap_Sort(arr, 0, sz);
+	//QuickSort(arr, 0, sz - 1);
+	Merge_Sort(arr, sz - 1);
+	
 	system("pause");
 	return 0;
 }
